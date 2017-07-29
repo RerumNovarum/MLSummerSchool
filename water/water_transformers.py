@@ -186,18 +186,22 @@ def prepr_and_catboost(X_tr, X_cv, X_te,
         X_cv = prepr.transform(X_cv)
         X_te = prepr.transform(X_te)
         X_test = prepr.transform(X_test)
+    print('preprocessing done')
     clf = catboost.CatBoostClassifier(*catboost_args, **catboost_kvargs)
+    print('create cb instance: %s' % clf)
     clf.fit(X_tr, y_tr,
          cat_features=np.where(np.array([(X_tr[c].dtype == object)
-                                  or (c.endswith('code')) or ('date' in c)
+                                  or (c.endswith('code')) 
                                          for c in X_tr.columns.values]))[0])
-    y_test = clf.predict(X_test)
+    print('fit!')
     display('train score: %s' % clf.score(X_tr, y_tr))
     display('cv score: %s' % clf.score(X_cv, y_cv))
     display('test score: %s' % clf.score(X_te, y_te))
+    y_test = clf.predict(X_test)
     ans=pd.DataFrame({'status_group': y_enc.inverse_transform(
         y_test.astype(int).ravel())},
                          index= X_test.iloc[:,0].values)
     ans.index.name = 'id'
     ans.to_csv(name)
+    print('saved!')
     return clf, X_tr, X_cv, X_te, y_tr, y_cv, y_te
